@@ -1,5 +1,6 @@
 package com.agnitimer.aktiehq.app;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -49,19 +50,80 @@ import javax.xml.parsers.ParserConfigurationException;
 
 public class AktienlisteFragment extends Fragment {
 
+    // Schlüssel-Konstante für das Speichern und Auslesen der Finanzdaten
+    static final String STATE_DATA = "Finanzdaten";
+
     // Der ArrayAdapter ist jetzt eine Membervariable der Klasse AktienlisteFragment
     ArrayAdapter<String> mAktienlisteAdapter;
 
     // SwipeRefreshLayout als Membervariable der Klasse AktienlisteFragment deklariert
     SwipeRefreshLayout mSwipeRefreshLayout;
 
+    // Tag für das Logging des Fragment-Lifecycle definieren
+    private final String LOG_TAG = AktienlisteFragment.class.getSimpleName();
+
     public AktienlisteFragment() {    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        Log.v(LOG_TAG, "In Callback-Methode: onAttach()");
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Log.v(LOG_TAG, "In Callback-Methode: onActivityCreated()");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.v(LOG_TAG, "In Callback-Methode: onStart()");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.v(LOG_TAG, "In Callback-Methode: onResume()");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.v(LOG_TAG, "In Callback-Methode: onPause()");
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.v(LOG_TAG, "In Callback-Methode: onStop()");
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Log.v(LOG_TAG, "In Callback-Methode: onDestroyView()");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.v(LOG_TAG, "In Callback-Methode: onDestroy()");
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        Log.v(LOG_TAG, "In Callback-Methode: onDetach()");
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Menü bekannt geben, dadurch kann unser Fragment Menü-Events verarbeiten
         setHasOptionsMenu(true);
+        Log.v(LOG_TAG, "In Callback-Methode: onCreate()");
     }
 
     @Override
@@ -87,7 +149,7 @@ public class AktienlisteFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        String LOG_TAG = AktienlisteFragment.class.getSimpleName();
+        Log.v(LOG_TAG, "In Callback-Methode: onCreateView()");
 
         Log.v(LOG_TAG, "verbose     - Meldung");
         Log.d(LOG_TAG, "debug       - Meldung");
@@ -106,6 +168,13 @@ public class AktienlisteFragment extends Fragment {
                 "Continental - Kurs: 209,94 €",
                 "Daimler - Kurs: 84,33 €"
         };
+
+        if (savedInstanceState != null) {
+            // Wiederherstellen der Werte des gespeicherten Fragment-Zustands
+            aktienlisteArray = savedInstanceState.getStringArray(STATE_DATA);
+
+            Log.v(LOG_TAG, "Zustand des Fragments wieder hergestellt.");
+        }
 
         List<String> aktienListe = new ArrayList<>(Arrays.asList(aktienlisteArray));
 
@@ -144,6 +213,22 @@ public class AktienlisteFragment extends Fragment {
         });
 
         return rootView;
+    }
+
+    @Override
+    public void onSaveInstanceState (Bundle savedInstanceState) {
+        // Always call the superclass so it can save the view hierarchy state
+        super.onSaveInstanceState(savedInstanceState);
+
+        Log.v(LOG_TAG, "In Callback-Methode: onSaveInstanceState()");
+
+        int anzahlElemente = mAktienlisteAdapter.getCount();
+        String [] aktienlisteArray = new String[anzahlElemente];
+        for (int i=0; i < anzahlElemente; i++) {
+            aktienlisteArray[i] = mAktienlisteAdapter.getItem(i);
+        }
+
+        savedInstanceState.putStringArray(STATE_DATA, aktienlisteArray);
     }
 
     public void aktualisiereDaten() {
