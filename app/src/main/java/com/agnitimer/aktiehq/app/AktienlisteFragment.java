@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 
@@ -51,6 +52,9 @@ public class AktienlisteFragment extends Fragment {
     // Der ArrayAdapter ist jetzt eine Membervariable der Klasse AktienlisteFragment
     ArrayAdapter<String> mAktienlisteAdapter;
 
+    // SwipeRefreshLayout als Membervariable der Klasse AktienlisteFragment deklariert
+    SwipeRefreshLayout mSwipeRefreshLayout;
+
     public AktienlisteFragment() {    }
 
     @Override
@@ -72,37 +76,12 @@ public class AktienlisteFragment extends Fragment {
         int id = item.getItemId();
         if (id == R.id.action_daten_aktualisieren) {
 
-            // Erzeugen einer Instanz von HoleDatenTask
-            HoleDatenTask holeDatenTask = new HoleDatenTask();
-
-            // Auslesen der ausgewählten Aktienliste aus den SharedPreferences
-            SharedPreferences sPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String prefAktienlisteKey = getString(R.string.preference_aktienliste_key);
-            String prefAktienlisteDefault = getString(R.string.preference_aktienliste_default);
-            String aktienliste = sPrefs.getString(prefAktienlisteKey, prefAktienlisteDefault);
-
-            // Auslesen des Anzeige-Modus aus den SharedPreferences
-            String prefIndizemodusKey = getString(R.string.preference_indizemodus_key);
-            Boolean indizemodus = sPrefs.getBoolean(prefIndizemodusKey, false);
-
-            // Starten des asynchronen Tasks und Übergabe der Aktienliste
-            if (indizemodus) {
-                String indizeliste = "^GDAXI,^TECDAX,^MDAXI,^SDAXI,^GSPC,^N225,^HSI,XAGUSD=X,XAUUSD=X";
-                holeDatenTask.execute(indizeliste);
-            }
-            else {
-                holeDatenTask.execute(aktienliste);
-            }
-
-            // Den Benutzer informieren, dass neue Aktiendaten im Hintergrund abgefragt werden
-            Toast.makeText(getActivity(), "Aktiendaten werden abgefragt!", Toast.LENGTH_SHORT).show();
+            aktualisiereDaten();
 
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -155,7 +134,43 @@ public class AktienlisteFragment extends Fragment {
             }
         });
 
+        mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipe_refresh_layout_aktienliste);
+
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                aktualisiereDaten();
+            }
+        });
+
         return rootView;
+    }
+
+    public void aktualisiereDaten() {
+        // Erzeugen einer Instanz von HoleDatenTask
+        HoleDatenTask holeDatenTask = new HoleDatenTask();
+
+        // Auslesen der ausgewählten Aktienliste aus den SharedPreferences
+        SharedPreferences sPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String prefAktienlisteKey = getString(R.string.preference_aktienliste_key);
+        String prefAktienlisteDefault = getString(R.string.preference_aktienliste_default);
+        String aktienliste = sPrefs.getString(prefAktienlisteKey, prefAktienlisteDefault);
+
+        // Auslesen des Anzeige-Modus aus den SharedPreferences
+        String prefIndizemodusKey = getString(R.string.preference_indizemodus_key);
+        Boolean indizemodus = sPrefs.getBoolean(prefIndizemodusKey, false);
+
+        // Starten des asynchronen Tasks und Übergabe der Aktienliste
+        if (indizemodus) {
+            String indizeliste = "^GDAXI,^TECDAX,^MDAXI,^SDAXI,^GSPC,^N225,^HSI,XAGUSD=X,XAUUSD=X";
+            holeDatenTask.execute(indizeliste);
+        }
+        else {
+            holeDatenTask.execute(aktienliste);
+        }
+
+        // Den Benutzer informieren, dass neue Aktiendaten im Hintergrund abgefragt werden
+        Toast.makeText(getActivity(), "Aktiendaten werden abgefragt!", Toast.LENGTH_SHORT).show();
     }
 
     // Innere Klasse HoleDatenTask führt den asynchronen Task auf eigenem Arbeitsthread aus
@@ -330,6 +345,8 @@ public class AktienlisteFragment extends Fragment {
             // Hintergrundberechnungen sind jetzt beendet, darüber informieren wir den Benutzer
             Toast.makeText(getActivity(), "Aktiendaten vollständig geladen!",
                     Toast.LENGTH_SHORT).show();
+
+            mSwipeRefreshLayout.setRefreshing(false);
         }
     }
 }
